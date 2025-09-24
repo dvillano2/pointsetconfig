@@ -1,0 +1,10 @@
+FROM python:3.13.3-slim
+RUN apt-get update && apt-get install \
+	-y curl git tmux vim zsh \
+	&& rm -rf /var/lib/apt/lists/* \
+	&& sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir flake8 mypy pylint
+WORKDIR /workspace
+CMD ["zsh"]
