@@ -2,7 +2,7 @@
 
 set -eu
 
-# oProject directory
+# Project directory
 # Should not be root
 PROJECT_DIR="$PWD"
 
@@ -28,9 +28,9 @@ if [ ! -f "Dockerfile" ]; then
 	cp ~/Dockerfile_template.txt Dockerfile.dev
 	cat Dockerfile.dev
 	echo
-	echo "This is what the Dockerfile will look like, do you want to make any changes?"
+	echo "This is the Dockerfile, do you want to make changes?"
+	echo "If so, respond with 'y' and make changes to Dockerfile.dev"
 	echo "Respond with y/n"
-	echo "If you decide you do want to change, modify Dockerfile.dev with your favorite text editor"
 	echo
 	read response
 	if [ "$response" = "y" ]; then
