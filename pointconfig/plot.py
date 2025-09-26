@@ -10,29 +10,33 @@ def plot_beginning():
     return fig, ax_top, ax_bottom
 
 
-def plot_middle_raw(
-    ax_top,
-    loop_nums,
-    loop_nums_with_multiplicity,
-    all_best_scores,
-    best_scores_list,
-    mean_scores_list,
-    median_scores_list,
-):
+def plot_middle_raw(ax_top, tracking_lists):
     """Plots the raw score on the top"""
     ax_top.clear()
 
     ax_top.scatter(
-        loop_nums_with_multiplicity,
-        all_best_scores,
+        tracking_lists["loop_nums_with_multiplicity"],
+        tracking_lists["all_best_scores"],
         alpha=0.1,
         color="gray",
         s=10,
         label="All Scores",
     )
-    ax_top.plot(loop_nums, best_scores_list, label="Best Score")
-    ax_top.plot(loop_nums, mean_scores_list, label="Mean Score")
-    ax_top.plot(loop_nums, median_scores_list, label="Median Score")
+    ax_top.plot(
+        tracking_lists["loop_nums"],
+        tracking_lists["best_scores_list"],
+        label="Best Score",
+    )
+    ax_top.plot(
+        tracking_lists["loop_nums"],
+        tracking_lists["mean_scores_list"],
+        label="Mean Score",
+    )
+    ax_top.plot(
+        tracking_lists["loop_nums"],
+        tracking_lists["median_scores_list"],
+        label="Median Score",
+    )
 
     ax_top.set_ylabel("Raw Score")
     ax_top.set_title("Training Score Progress")
@@ -41,20 +45,16 @@ def plot_middle_raw(
 
 def plot_middle_normalized(
     ax_bottom,
-    loop_nums,
-    normalized_scores_list,
-    max_threshold,
-    normalization_factor,
-    threshold_labels,
-    fixed_colors,
+    tracking_lists,
+    threshold_data,
 ):
     """Plots the normalized scores on the bottom"""
     ax_bottom.clear()
 
     # Bottom plot: normalized scores
     ax_bottom.plot(
-        loop_nums,
-        normalized_scores_list,
+        tracking_lists["loop_nums"],
+        tracking_lists["normalized_scores_list"],
         label="Normalized Score",
         color="purple",
     )
@@ -62,9 +62,11 @@ def plot_middle_normalized(
     # Plot normalized threshold lines
     threshold_lines = []
     threshold_line_labels = []
-    for threshold_val, label in threshold_labels:
-        normalized_val = (threshold_val - max_threshold) / normalization_factor
-        color = fixed_colors[threshold_val]
+    for threshold_val, label in threshold_data["threshold_labels"]:
+        normalized_val = (
+            threshold_val - threshold_data["max_threshold"]
+        ) / threshold_data["normalization_factor"]
+        color = threshold_data["fixed_colors"][threshold_val]
         line = ax_bottom.axhline(
             normalized_val,
             color=color,
@@ -76,11 +78,15 @@ def plot_middle_normalized(
         threshold_line_labels.append(label)
 
     # Integer level lines (light gray)
-    max_norm = int(max(normalized_scores_list + [0])) + 1
+    max_norm = int(max(tracking_lists["normalized_scores_list"] + [0])) + 1
     for level in range(max_norm):
         ax_bottom.axhline(level, color="gray", linestyle="--", alpha=0.2)
         ax_bottom.text(
-            loop_nums[-1] if loop_nums else 0,
+            (
+                tracking_lists["loop_nums"][-1]
+                if tracking_lists["loop_nums"]
+                else 0
+            ),
             level,
             f"{level}",
             fontsize=8,

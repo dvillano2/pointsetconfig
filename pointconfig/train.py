@@ -20,28 +20,36 @@ from pointconfig.lightweight_score import (
 
 
 def training(loops=5000, top_examples=100, plot=True, checkpoint=True):
+    """Trains, plots, and checkpoints"""
     if plot:
         fig, ax_top, ax_bottom = plot_beginning()
 
-    loop_nums = []
-    loop_nums_with_multiplicity = []
-    all_best_scores = []
-    best_scores_list = []
-    mean_scores_list = []
-    median_scores_list = []
-    normalized_scores_list = []
-
-    thresholds = score_thresholds(PRIME)
-    max_threshold = max(thresholds)
-    normalization_factor = PRIME * TOTAL_DIRECTIONS
+    tracking_lists = {
+        "loop_nums": [],
+        "loop_nums_with_multiplicity": [],
+        "all_best_scores": [],
+        "best_scores_list": [],
+        "mean_scores_list": [],
+        "median_scores_list": [],
+        "normalized_scores_list": [],
+    }
 
     best_examples_seen = []
 
-    # Assign fixed colors to each threshold
-    threshold_labels = list(thresholds.items())
-    fixed_colors = dict(
-        zip(thresholds.keys(), plt.get_cmap("tab10").colors[: len(thresholds)])
-    )
+    thresholds = score_thresholds(PRIME)
+
+    threshold_data = {
+        "max_threshold": max(thresholds),
+        "normalization_factor": PRIME * TOTAL_DIRECTIONS,
+        # Assign fixed colors to each threshold
+        "threshold_labels": list(thresholds.items()),
+        "fixed_colors": dict(
+            zip(
+                thresholds.keys(),
+                plt.get_cmap("tab10").colors[: len(thresholds)],
+            )
+        ),
+    }
 
     model, loss_function, optimizer = model_info()
     for loop_num in range(loops):
@@ -69,35 +77,31 @@ def training(loops=5000, top_examples=100, plot=True, checkpoint=True):
 
         best_score = best_scores.max().item()
         mean_score = best_scores.mean().item()
-        best_scores_list.append(best_score)
-        mean_scores_list.append(mean_score)
-        median_scores_list.append(np.median(best_scores))
-        normalized_score = (best_score - max_threshold) / normalization_factor
-        normalized_scores_list.append(normalized_score)
+        tracking_lists["best_scores_list"].append(best_score)
+        tracking_lists["mean_scores_list"].append(mean_score)
+        tracking_lists["median_scores_list"].append(np.median(best_scores))
+        normalized_score = (
+            best_score - threshold_data["max_threshold"]
+        ) / threshold_data["normalization_factor"]
+
+        tracking_lists["normalized_scores_list"].append(normalized_score)
 
         scores_this_loop = best_scores.tolist()
-        loop_nums.append(loop_num)
-        loop_nums_with_multiplicity.extend([loop_num] * len(scores_this_loop))
-        all_best_scores.extend(scores_this_loop)
+        tracking_lists["loop_nums"].append(loop_num)
+        tracking_lists["loop_nums_with_multiplicity"].extend(
+            [loop_num] * len(scores_this_loop)
+        )
+        tracking_lists["all_best_scores"].extend(scores_this_loop)
 
         if plot:
             plot_middle_raw(
                 ax_top,
-                loop_nums,
-                loop_nums_with_multiplicity,
-                all_best_scores,
-                best_scores_list,
-                mean_scores_list,
-                median_scores_list,
+                tracking_lists,
             )
             plot_middle_normalized(
                 ax_bottom,
-                loop_nums,
-                normalized_scores_list,
-                max_threshold,
-                normalization_factor,
-                threshold_labels,
-                fixed_colors,
+                tracking_lists,
+                threshold_data,
             )
 
     if plot:
