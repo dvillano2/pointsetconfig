@@ -110,6 +110,18 @@ def plot_middle_normalized(
     plt.pause(0.01)
 
 
+def plot_middle(ax_top, ax_bottom, tracking_lists, threshold_data):
+    plot_middle_raw(
+        ax_top,
+        tracking_lists,
+    )
+    plot_middle_normalized(
+        ax_bottom,
+        tracking_lists,
+        threshold_data,
+    )
+
+
 def plot_end():
     """Finishes off the plotting"""
     plt.ioff()
