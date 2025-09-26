@@ -1,6 +1,5 @@
 import torch
 import numpy as np
-import time
 
 import pointconfig.lightweight_score as lws
 import pointconfig.model as pcm
@@ -35,21 +34,12 @@ def generate_subsets(model, num_subsets):
     all_subsets = torch.zeros((num_subsets, INPUT_LENGTH), dtype=torch.float32)
 
     for stage in range(lws.WORD_LENGTH):
-        #print(f"working on stage {stage + 1} out of {lws.WORD_LENGTH}")
-        #t0 = time.time()
         all_subsets[:, stage + lws.WORD_LENGTH] = 1.0
-        #t1 = time.time()
         probs = pcm.model_forward(all_subsets, model)
-        #t2 = time.time()
         all_subsets[:, stage] = (torch.rand(num_subsets) < probs).to(
             torch.float32
         )
-        #t3 = time.time()
         all_subsets[:, stage + lws.WORD_LENGTH] = 0.0
-        #t4 = time.time()
-        #print(
-        #    f"Stage {stage:4d} | forward: {t1-t0:.4f}s | sample: {t2-t1:.4f}s | write: {t3-t2:.4f}s | fill future: {t4-t3:.4f}s"
-        #)
 
     scores = lws.score_words(all_subsets.numpy().astype(np.uint8))
 
