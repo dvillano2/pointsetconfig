@@ -31,7 +31,12 @@ def model_info():
 
     loss_function = nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
-    return model, loss_function, optimizer
+    complete_model_info = {
+        "model": model,
+        "loss_fun": loss_function,
+        "optimizer": optimizer,
+    }
+    return complete_model_info
 
 
 def train_model(

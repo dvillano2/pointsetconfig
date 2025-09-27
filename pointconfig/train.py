@@ -27,6 +27,8 @@ def make_tracking_lists():
         "mean_scores_list": [],
         "median_scores_list": [],
         "normalized_scores_list": [],
+        "loss": [],
+        "best_examples_seen": [],
     }
     return tracking_lists
 
@@ -60,35 +62,47 @@ def make_update_info(best_scores, threshold_data):
     return update_info
 
 
-def training(loops=5000, top_examples=100, plot=True, checkpoint=True):
+def best_from_model(model, batch_size, percentile=90):
+    """returns a tuple of best subset and best scores"""
+    all_subsets, scores = generate_subsets(model, batch_size)
+    return get_highest_subsets(all_subsets, scores, percentile)
+
+
+def training(loops=5000, top_examples=100, plot=True):
     """Trains, plots, and checkpoints"""
     if plot:
         fig, ax_top, ax_bottom = plot_beginning()
 
     tracking_lists = make_tracking_lists()
     threshold_data = make_thresholds_and_data(PRIME, TOTAL_DIRECTIONS)
-    best_examples_seen = []
+    complete_model_info = model_info()
 
-    model, loss_function, optimizer = model_info()
     for loop_num in range(loops):
-        model.eval()
-        all_subsets, scores = generate_subsets(model, BATCH_SIZE)
-        best_subsets, best_scores = get_highest_subsets(
-            all_subsets, scores, 90
+        complete_model_info["model"].eval()
+        best_subsets, best_scores = best_from_model(
+            complete_model_info["model"], BATCH_SIZE
         )
 
         for score, subset in zip(best_scores, best_subsets):
-            if len(best_examples_seen) < top_examples:
-                heapq.heappush(best_examples_seen, (score, subset))
-            elif score > best_examples_seen[0][0]:
-                heapq.heappushpop(best_examples_seen, (score, subset))
+            if len(tracking_lists["best_examples_seen"]) < top_examples:
+                heapq.heappush(
+                    tracking_lists["best_examples_seen"], (score, subset)
+                )
+            elif score > tracking_lists["best_examples_seen"][0][0]:
+                heapq.heappushpop(
+                    tracking_lists["best_examples_seen"], (score, subset)
+                )
 
         training_set = expand_subsets(best_subsets)
-        loss = train_model(
-            training_set, model, loss_function, optimizer, shuffle=True
+        tracking_lists["loss"] = train_model(
+            training_set,
+            complete_model_info["model"],
+            complete_model_info["loss_function"],
+            complete_model_info["optimizer"],
+            shuffle=True,
         )
 
-        print(f"Loop {loop_num+1}, Loss: {loss}")
+        print(f"Loop {loop_num+1}, Loss: {tracking_lists['loss']}")
         print(f"Best scores mean: {best_scores.mean()}")
 
         update_info = make_update_info(best_scores, threshold_data)
