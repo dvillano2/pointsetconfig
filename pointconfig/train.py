@@ -38,7 +38,6 @@ def train(loops=5000, top_examples=100, plot=True):
         )
         training_tracker.update_best_examples(best_subsets, best_scores)
 
-        # training_tracker.update_best_examples(best_subsets, best_scores)
         training_set = expand_subsets(best_subsets)
         loss = train_model(
             training_set,
