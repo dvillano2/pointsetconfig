@@ -92,15 +92,16 @@ class TrainingTracker:
 
     def update_best_examples(self, best_subsets, best_scores):
         for score, subset in zip(best_scores, best_subsets):
+            str_subset = "".join([str(inout) for inout in subset.tolist()])
             if len(self.top_examples) < self.num_top_examples:
                 heapq.heappush(
                     self.top_examples,
-                    (score, subset),
+                    (score, str_subset),
                 )
             elif score > self.top_examples[0][0]:
                 heapq.heappushpop(
                     self.top_examples,
-                    (score, subset),
+                    (score, str_subset),
                 )
 
 
@@ -124,6 +125,7 @@ def train(loops=5000, top_examples=100, plot=True):
         best_subsets, best_scores = best_from_model(
             complete_model_info["model"], BATCH_SIZE
         )
+        training_tracker.update_best_examples(best_subsets, best_scores)
 
         # training_tracker.update_best_examples(best_subsets, best_scores)
         training_set = expand_subsets(best_subsets)
@@ -138,8 +140,8 @@ def train(loops=5000, top_examples=100, plot=True):
         )
 
         print(
-                f"At {loop_num+1}, Loss: "
-                f"{training_tracker.tracking_lists['loss'][-1]}"
+            f"At {loop_num+1}, Loss: "
+            f"{training_tracker.tracking_lists['loss'][-1]}"
         )
         print(f"Best scores mean: {best_scores.mean()}")
 
