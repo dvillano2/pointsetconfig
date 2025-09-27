@@ -1,4 +1,22 @@
 import matplotlib.pyplot as plt
+from pointconfig.lightweight_score import score_thresholds
+
+
+def make_thresholds_and_data(prime, total_directions):
+    thresholds = score_thresholds(prime)
+    threshold_data = {
+        "max_threshold": max(thresholds),
+        "normalization_factor": prime * total_directions,
+        "threshold_labels": list(thresholds.items()),
+        # Assign fixed colors to each threshold
+        "fixed_colors": dict(
+            zip(
+                thresholds.keys(),
+                plt.get_cmap("tab10").colors[: len(thresholds)],
+            )
+        ),
+    }
+    return threshold_data
 
 
 def plot_beginning():
