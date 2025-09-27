@@ -33,7 +33,7 @@ def model_info():
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
     complete_model_info = {
         "model": model,
-        "loss_fun": loss_function,
+        "loss_function": loss_function,
         "optimizer": optimizer,
     }
     return complete_model_info

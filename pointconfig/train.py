@@ -18,21 +18,6 @@ from pointconfig.lightweight_score import (
 )
 
 
-def make_tracking_lists():
-    tracking_lists = {
-        "loop_nums": [],
-        "loop_nums_with_multiplicity": [],
-        "all_best_scores": [],
-        "best_scores_list": [],
-        "mean_scores_list": [],
-        "median_scores_list": [],
-        "normalized_scores_list": [],
-        "loss": [],
-        "best_examples_seen": [],
-    }
-    return tracking_lists
-
-
 def make_thresholds_and_data(prime, total_directions):
     thresholds = score_thresholds(prime)
     threshold_data = {
@@ -50,6 +35,20 @@ def make_thresholds_and_data(prime, total_directions):
     return threshold_data
 
 
+def make_tracking_lists():
+    tracking_lists = {
+        "loop_nums": [],
+        "loop_nums_with_multiplicity": [],
+        "all_best_scores": [],
+        "best_scores_list": [],
+        "mean_scores_list": [],
+        "median_scores_list": [],
+        "normalized_scores_list": [],
+        "loss": [],
+    }
+    return tracking_lists
+
+
 def make_update_info(best_scores, threshold_data):
     update_info = {
         "best_score": best_scores.max().item(),
@@ -62,18 +61,61 @@ def make_update_info(best_scores, threshold_data):
     return update_info
 
 
+class TrainingTracker:
+    def __init__(self, num_top_examples):
+        self.tracking_lists = make_tracking_lists()
+        self.best_examples_seen = []
+        self.num_top_examples = num_top_examples
+        self.top_examples = []
+
+    def update_lists(self, best_scores, threshold_data, loop_num):
+        update_info = make_update_info(best_scores, threshold_data)
+        self.tracking_lists["best_scores_list"].append(
+            update_info["best_score"]
+        )
+        self.tracking_lists["mean_scores_list"].append(
+            update_info["mean_score"]
+        )
+        self.tracking_lists["median_scores_list"].append(
+            np.median(best_scores)
+        )
+        self.tracking_lists["normalized_scores_list"].append(
+            update_info["normalized_score"]
+        )
+        self.tracking_lists["loop_nums"].append(loop_num)
+        self.tracking_lists["loop_nums_with_multiplicity"].extend(
+            [loop_num] * len(update_info["scores_this_loop"])
+        )
+        self.tracking_lists["all_best_scores"].extend(
+            update_info["scores_this_loop"]
+        )
+
+    def update_best_examples(self, best_subsets, best_scores):
+        for score, subset in zip(best_scores, best_subsets):
+            if len(self.top_examples) < self.num_top_examples:
+                heapq.heappush(
+                    self.top_examples,
+                    (score, subset),
+                )
+            elif score > self.top_examples[0][0]:
+                heapq.heappushpop(
+                    self.top_examples,
+                    (score, subset),
+                )
+
+
 def best_from_model(model, batch_size, percentile=90):
     """returns a tuple of best subset and best scores"""
     all_subsets, scores = generate_subsets(model, batch_size)
     return get_highest_subsets(all_subsets, scores, percentile)
 
 
-def training(loops=5000, top_examples=100, plot=True):
+def train(loops=5000, top_examples=100, plot=True):
     """Trains, plots, and checkpoints"""
     if plot:
         fig, ax_top, ax_bottom = plot_beginning()
 
-    tracking_lists = make_tracking_lists()
+    training_tracker = TrainingTracker(num_top_examples=top_examples)
     threshold_data = make_thresholds_and_data(PRIME, TOTAL_DIRECTIONS)
     complete_model_info = model_info()
 
@@ -83,46 +125,37 @@ def training(loops=5000, top_examples=100, plot=True):
             complete_model_info["model"], BATCH_SIZE
         )
 
-        for score, subset in zip(best_scores, best_subsets):
-            if len(tracking_lists["best_examples_seen"]) < top_examples:
-                heapq.heappush(
-                    tracking_lists["best_examples_seen"], (score, subset)
-                )
-            elif score > tracking_lists["best_examples_seen"][0][0]:
-                heapq.heappushpop(
-                    tracking_lists["best_examples_seen"], (score, subset)
-                )
-
+        # training_tracker.update_best_examples(best_subsets, best_scores)
         training_set = expand_subsets(best_subsets)
-        tracking_lists["loss"] = train_model(
-            training_set,
-            complete_model_info["model"],
-            complete_model_info["loss_function"],
-            complete_model_info["optimizer"],
-            shuffle=True,
+        training_tracker.tracking_lists["loss"].append(
+            train_model(
+                training_set,
+                complete_model_info["model"],
+                complete_model_info["loss_function"],
+                complete_model_info["optimizer"],
+                shuffle=True,
+            )
         )
 
-        print(f"Loop {loop_num+1}, Loss: {tracking_lists['loss']}")
+        print(
+                f"At {loop_num+1}, Loss: "
+                f"{training_tracker.tracking_lists['loss'][-1]}"
+        )
         print(f"Best scores mean: {best_scores.mean()}")
 
-        update_info = make_update_info(best_scores, threshold_data)
-
-        tracking_lists["best_scores_list"].append(update_info["best_score"])
-        tracking_lists["mean_scores_list"].append(update_info["mean_score"])
-        tracking_lists["median_scores_list"].append(np.median(best_scores))
-        tracking_lists["normalized_scores_list"].append(
-            update_info["normalized_score"]
-        )
-        tracking_lists["loop_nums"].append(loop_num)
-        tracking_lists["loop_nums_with_multiplicity"].extend(
-            [loop_num] * len(update_info["scores_this_loop"])
-        )
-        tracking_lists["all_best_scores"].extend(
-            update_info["scores_this_loop"]
-        )
+        training_tracker.update_lists(best_scores, threshold_data, loop_num)
 
         if plot:
-            plot_middle(ax_top, ax_bottom, tracking_lists, threshold_data)
+            plot_middle(
+                ax_top,
+                ax_bottom,
+                training_tracker.tracking_lists,
+                threshold_data,
+            )
 
     if plot:
         plot_end()
+
+
+if __name__ == "__main__":
+    train()
