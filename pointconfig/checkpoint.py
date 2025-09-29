@@ -1,5 +1,6 @@
 from pathlib import Path
 from datetime import datetime
+import os
 import json
 import torch
 
@@ -40,8 +41,14 @@ def checkpoint(
         "optimizer": complete_model_info["optimizer"].state_dict(),
         "training_tracker": training_tracker,
     }
+    old_model_name = ""
+    for filename in os.listdir(save_path):
+        if filename.startswith("model"):
+            old_model_name = filename
     model_name = "model" + file_name_end + ".pt"
     torch.save(save_dict, save_path / model_name)
+    if old_model_name:
+        os.remove(save_path / old_model_name)
 
     # save the best examples as a json
     top_examples_save = {}
@@ -50,6 +57,6 @@ def checkpoint(
         top_examples_save[i] = {"score": score, "subset": subset}
     best_examples_path = save_path / "top_exmples.json"
     with open(best_examples_path, "w", encoding="utf8") as f:
-        json.dump(top_examples_save, f)
+        json.dump(top_examples_save, f, indent=4)
 
     return save_path

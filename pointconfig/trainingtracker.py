@@ -34,7 +34,9 @@ class TrainingTracker:
 
     def update_best_examples(self, best_subsets, best_scores):
         for score, subset in zip(best_scores, best_subsets):
-            str_subset = "".join([str(inout) for inout in subset.tolist()])
+            str_subset = "".join(
+                [str(int(inout)) for inout in subset.tolist()]
+            )
             if len(self.top_examples) < self.num_top_examples:
                 heapq.heappush(
                     self.top_examples,
