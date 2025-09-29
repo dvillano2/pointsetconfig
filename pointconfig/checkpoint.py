@@ -1,14 +1,13 @@
 from pathlib import Path
-import torch
 from datetime import datetime
 import json
+import torch
 
 
 def checkpoint(
     loop_num,
     complete_model_info,
     training_tracker,
-    best_examples,
     first_save,
     save_path=None,
     plot=None,
@@ -40,11 +39,11 @@ def checkpoint(
     torch.save(save_dict)
 
     # save the best examples as a json
-    best_examples_save = {}
-    for i, pair in enumerate(best_examples):
+    top_examples_save = {}
+    for i, pair in enumerate(training_tracker["top_examples"]):
         score, subset = pair
-        best_examples_save[i] = {"score": score, "subset": subset}
-    best_examples_path = save_path / "best_exmples.json"
-    json.dump(best_examples_save, best_examples_path)
+        top_examples_save[i] = {"score": score, "subset": subset}
+    best_examples_path = save_path / "top_exmples.json"
+    json.dump(top_examples_save, best_examples_path)
 
     return save_path
