@@ -16,13 +16,34 @@ from pointconfig.lightweight_score import (
 )
 
 
+def checkpoint(loop_num, complete_model_info, first_save, plot=None):
+    training_path = Path("./training_runs")
+    day_time = datetime.now().strftime("%d%b%Y_%H_%M_%S")
+    save_path = training_path / day_time
+    save_path.mkdir(exists_ok=True)
+
+    if plot:
+        figures_path = save_path / "figures"
+        figures_path.mkdir(exists_ok=True)
+        plot.savefig(figures_path)
+
+    model_path = save_path / "model"
+    model_path.mkdir(exists_ok=True)
+    save_dict = {
+        "loop_num": loop_num,
+        "model": complete_model_info["model"].state_dict(),
+        "optimizer": complete_model_info["optimizer"].state_dict(),
+    }
+    torch.save(save_dict)
+
+
 def best_from_model(model, batch_size, percentile=90):
     """returns a tuple of best subset and best scores"""
     all_subsets, scores = generate_subsets(model, batch_size)
     return get_highest_subsets(all_subsets, scores, percentile)
 
 
-def train(loops=5000, top_examples=100, plot=True):
+def train(loops=5000, top_examples=100, plot=True, checkpoint=True):
     """Trains, plots, and checkpoints"""
     if plot:
         fig, ax_top, ax_bottom = plot_beginning()
@@ -62,6 +83,12 @@ def train(loops=5000, top_examples=100, plot=True):
                 training_tracker.tracking_lists,
                 threshold_data,
             )
+
+        if checkpoint:
+            training_path = Path("./training_runs")
+            day_time = datetime.now().strftime("%d%b%Y_%H_%M_%S")
+            save_path = training_path / day_time
+            save_path.mkdir(exists_ok=True)
 
     if plot:
         plot_end()
