@@ -1,4 +1,5 @@
 from pointconfig.trainingtracker import TrainingTracker
+from pointconfig.checkpoint import checkpoint
 from pointconfig.model import model_info, train_model
 from pointconfig.plot import (
     plot_beginning,
@@ -22,7 +23,7 @@ def best_from_model(model, batch_size, percentile=90):
     return get_highest_subsets(all_subsets, scores, percentile)
 
 
-def train(loops=5000, top_examples=100, plot=True, checkpoint=True):
+def train(loops=5000, top_examples=100, plot=True, save_checkpoint=True):
     """Trains, plots, and checkpoints"""
     if plot:
         fig, ax_top, ax_bottom = plot_beginning()
@@ -65,7 +66,7 @@ def train(loops=5000, top_examples=100, plot=True, checkpoint=True):
                 threshold_data,
             )
 
-        if checkpoint and loop_num % 2 == 0:
+        if save_checkpoint and loop_num % 2 == 0:
             save_path = checkpoint(
                 loop_num,
                 complete_model_info,

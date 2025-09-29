@@ -5,7 +5,6 @@ import numpy as np
 class TrainingTracker:
     def __init__(self, num_top_examples):
         self.tracking_lists = self.__class__.make_tracking_lists()
-        self.best_examples_seen = []
         self.num_top_examples = num_top_examples
         self.top_examples = []
 
