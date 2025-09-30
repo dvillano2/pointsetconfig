@@ -1,5 +1,6 @@
 import heapq
 import numpy as np
+from pointconfig.lightweight_score import _true_word_from_word
 
 
 class TrainingTracker:
@@ -34,6 +35,7 @@ class TrainingTracker:
 
     def update_best_examples(self, best_subsets, best_scores):
         for score, subset in zip(best_scores, best_subsets):
+            subset = _true_word_from_word(subset.numpy())
             str_subset = "".join(
                 [str(int(inout)) for inout in subset.tolist()]
             )

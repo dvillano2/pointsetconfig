@@ -65,7 +65,7 @@ def checkpoint(
     for i, pair in enumerate(training_tracker.top_examples):
         score, subset = pair
         top_examples_save[i] = {"score": score, "subset": subset}
-    best_examples_path = save_path / "top_exmples.json"
+    best_examples_path = save_path / "top_examples.json"
     with open(best_examples_path, "w", encoding="utf8") as f:
         json.dump(top_examples_save, f, indent=4)
 
