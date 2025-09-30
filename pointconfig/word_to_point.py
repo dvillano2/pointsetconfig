@@ -6,13 +6,14 @@ from numba import njit
 def word_to_point(word, prime, dimension):
     point_set = set()
     for index, in_out in enumerate(word):
-        if in_out == 1:
+        if in_out == "1":
             point = index_to_point(prime, dimension, index)
+            point = tuple(int(coord) for coord in point)
             point_set.add(point)
     return point_set
 
 
-def check_distribution(point_set, prime, dimension):
+def check_equidistribution(point_set, prime, dimension):
     equidistributed_directions = set()
     for direction_index in range(TOTAL_DIRECTIONS):
         direction = index_to_direction(prime, dimension, direction_index)
