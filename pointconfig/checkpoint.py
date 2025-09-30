@@ -3,6 +3,16 @@ from datetime import datetime
 import os
 import json
 import torch
+from torch import nn
+from pointconfig.model import (
+    FIRST_LAYER,
+    SECOND_LAYER,
+    THIRD_LAYER,
+    LEARNING_RATE,
+    INPUT_LENGTH,
+)
+from pointconfig.trainingtracker import TrainingTracker
+from torch.serialization import add_safe_globals
 
 
 def checkpoint(
@@ -18,7 +28,7 @@ def checkpoint(
 
     if not save_path:
         training_path = Path("./training_runs")
-        day_time = datetime.now().strftime("%d%b%Y_%H_%M_%S")
+        day_time = datetime.now().strftime("%b%d%Y_%H_%M_%S")
         save_path = training_path / day_time
         save_path.mkdir(exist_ok=True)
 
@@ -60,3 +70,28 @@ def checkpoint(
         json.dump(top_examples_save, f, indent=4)
 
     return save_path
+
+
+def load_checkpoint(path):
+    model = nn.Sequential(
+        nn.Linear(INPUT_LENGTH, FIRST_LAYER),
+        nn.ReLU(),
+        nn.Linear(FIRST_LAYER, SECOND_LAYER),
+        nn.ReLU(),
+        nn.Linear(SECOND_LAYER, THIRD_LAYER),
+        nn.ReLU(),
+        nn.Linear(THIRD_LAYER, 1),
+        nn.Sigmoid(),
+    )
+    optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
+
+    add_safe_globals([TrainingTracker])
+    complete_model_info = torch.load(path, weights_only=False)
+    model.load_state_dict(complete_model_info["model"])
+    optimizer.load_state_dict(complete_model_info["optimizer"])
+    return (
+        model,
+        optimizer,
+        complete_model_info["loop_num"],
+        complete_model_info["training_tracker"],
+    )

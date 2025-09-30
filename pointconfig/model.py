@@ -8,7 +8,7 @@ import pointconfig.make_subset as ms
 PRIME = lws.PRIME
 DIMENSION = lws.DIMENSION
 WORD_LENGTH = lws.WORD_LENGTH
-INTPUT_LENGTH = ms.INPUT_LENGTH
+INPUT_LENGTH = ms.INPUT_LENGTH
 
 FIRST_LAYER = 128
 SECOND_LAYER = 64
@@ -19,7 +19,7 @@ LEARNING_RATE = 1e-3
 
 def model_info():
     model = nn.Sequential(
-        nn.Linear(INTPUT_LENGTH, FIRST_LAYER),
+        nn.Linear(INPUT_LENGTH, FIRST_LAYER),
         nn.ReLU(),
         nn.Linear(FIRST_LAYER, SECOND_LAYER),
         nn.ReLU(),

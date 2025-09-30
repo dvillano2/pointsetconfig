@@ -66,7 +66,7 @@ def train(loops=5000, top_examples=100, plot=True, save_checkpoint=True):
                 threshold_data,
             )
 
-        if save_checkpoint and loop_num % 2 == 0:
+        if save_checkpoint and loop_num % 50 == 0:
             save_path = checkpoint(
                 loop_num,
                 complete_model_info,
