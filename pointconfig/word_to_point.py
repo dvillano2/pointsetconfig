@@ -28,5 +28,6 @@ def check_equidistribution(point_set, prime, dimension):
             )
             tracker[dot_product] += 1
         if all(point_count == tracker[0] for point_count in tracker):
-            equidistributed_directions.add(direction)
+            hashable_direction = tuple(direction.tolist())
+            equidistributed_directions.add(hashable_direction)
     return equidistributed_directions
