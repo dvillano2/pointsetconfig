@@ -1,6 +1,7 @@
-from pointconfig.trainingtracker import TrainingTracker
-from pointconfig.checkpoint import checkpoint
-from pointconfig.model import model_info, train_model
+import argparse
+from torch import nn
+from pointconfig.checkpoint import checkpoint, load_checkpoint
+from pointconfig.model import train_model
 from pointconfig.plot import (
     plot_beginning,
     plot_middle,
@@ -11,7 +12,6 @@ from pointconfig.make_subset import generate_subsets, get_highest_subsets
 from pointconfig.expand_subset import expand_subsets
 from pointconfig.lightweight_score import (
     BATCH_SIZE,
-    score_thresholds,
     PRIME,
     TOTAL_DIRECTIONS,
 )
@@ -23,17 +23,22 @@ def best_from_model(model, batch_size, percentile=90):
     return get_highest_subsets(all_subsets, scores, percentile)
 
 
-def train(loops=5000, top_examples=100, plot=True, save_checkpoint=True):
+def train(
+    loops=5000,
+    top_examples=100,
+    plot=True,
+    save_checkpoint=True,
+    save_path=None,
+):
     """Trains, plots, and checkpoints"""
     if plot:
         fig, ax_top, ax_bottom = plot_beginning()
 
-    training_tracker = TrainingTracker(num_top_examples=top_examples)
     threshold_data = make_thresholds_and_data(PRIME, TOTAL_DIRECTIONS)
-    complete_model_info = model_info()
-
-    first_save = True
-    save_path = None
+    complete_model_info, training_tracker, base_loop_num = load_checkpoint(
+        save_path, top_examples
+    )
+    first_save = bool(save_path is None)
     for loop_num in range(loops):
         complete_model_info["model"].eval()
         best_subsets, best_scores = best_from_model(
@@ -56,7 +61,9 @@ def train(loops=5000, top_examples=100, plot=True, save_checkpoint=True):
             f"Best scores mean: {best_scores.mean()}"
         )
 
-        training_tracker.update_lists(best_scores, threshold_data, loop_num)
+        training_tracker.update_lists(
+            best_scores, threshold_data, base_loop_num + loop_num
+        )
 
         if plot:
             plot_middle(
@@ -68,7 +75,7 @@ def train(loops=5000, top_examples=100, plot=True, save_checkpoint=True):
 
         if save_checkpoint and loop_num % 50 == 0:
             save_path = checkpoint(
-                loop_num,
+                base_loop_num + loop_num,
                 complete_model_info,
                 training_tracker,
                 first_save,
@@ -78,8 +85,18 @@ def train(loops=5000, top_examples=100, plot=True, save_checkpoint=True):
             first_save = False
 
     if plot:
-        plot_end()
+        plot_end(fig)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model_path")
+    args = parser.parse_args()
+    if args.model_path:
+        train(save_path=args.model_path)
+    else:
+        train()
 
 
 if __name__ == "__main__":
-    train()
+    main()

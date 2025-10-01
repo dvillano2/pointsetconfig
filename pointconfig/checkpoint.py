@@ -5,6 +5,7 @@ import json
 import torch
 from torch import nn
 from pointconfig.model import (
+    model_info,
     FIRST_LAYER,
     SECOND_LAYER,
     THIRD_LAYER,
@@ -72,7 +73,7 @@ def checkpoint(
     return save_path
 
 
-def load_checkpoint(path):
+def load_model(path):
     model = nn.Sequential(
         nn.Linear(INPUT_LENGTH, FIRST_LAYER),
         nn.ReLU(),
@@ -86,12 +87,35 @@ def load_checkpoint(path):
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
     add_safe_globals([TrainingTracker])
-    complete_model_info = torch.load(path, weights_only=False)
-    model.load_state_dict(complete_model_info["model"])
-    optimizer.load_state_dict(complete_model_info["optimizer"])
+    checkpoint_info = torch.load(path, weights_only=False)
+    model.load_state_dict(checkpoint_info["model"])
+    optimizer.load_state_dict(checkpoint_info["optimizer"])
     return (
         model,
         optimizer,
-        complete_model_info["loop_num"],
-        complete_model_info["training_tracker"],
+        checkpoint_info["loop_num"],
+        checkpoint_info["training_tracker"],
     )
+
+def load_checkpoint(save_path, top_examples):
+    if save_path is not None:
+        save_path = Path(save_path)
+        for filename in os.listdir(save_path):
+            if filename.startswith("model"):
+                model_file = filename
+        model_path = save_path / model_file
+        model, optimizer, base_loop_num, training_tracker = load_model(
+            model_path
+        )
+        loss_function = nn.BCELoss()
+        complete_model_info = {
+            "model": model,
+            "loss_function": loss_function,
+            "optimizer": optimizer,
+        }
+    else:
+        complete_model_info = model_info()
+        training_tracker = TrainingTracker(num_top_examples=top_examples)
+        base_loop_num = 0
+
+    return complete_model_info, training_tracker, base_loop_num
