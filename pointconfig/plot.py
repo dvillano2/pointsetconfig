@@ -140,8 +140,8 @@ def plot_middle(ax_top, ax_bottom, tracking_lists, threshold_data):
     )
 
 
-def plot_end():
+def plot_end(fig):
     """Finishes off the plotting"""
     plt.ioff()
-    plt.tight_layout()
-    plt.show()
+    fig.tight_layout()
+    plt.close(fig)
