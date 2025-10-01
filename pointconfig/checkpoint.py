@@ -32,6 +32,8 @@ def checkpoint(
         day_time = datetime.now().strftime("%b%d%Y_%H_%M_%S")
         save_path = training_path / day_time
         save_path.mkdir(exist_ok=True)
+    else:
+        save_path = Path(save_path)
 
     # file name info
     str_loop_num = str(loop_num)

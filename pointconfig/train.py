@@ -33,6 +33,8 @@ def train(
     """Trains, plots, and checkpoints"""
     if plot:
         fig, ax_top, ax_bottom = plot_beginning()
+    else:
+        fig = None
 
     threshold_data = make_thresholds_and_data(PRIME, TOTAL_DIRECTIONS)
     complete_model_info, training_tracker, base_loop_num = load_checkpoint(
@@ -56,7 +58,7 @@ def train(
         )
         training_tracker.tracking_lists["loss"].append(loss)
         print(
-            f"At {loop_num+1}, Loss: "
+            f"At {base_loop_num + loop_num+1}, Loss: "
             f"{training_tracker.tracking_lists['loss'][-1]}\n"
             f"Best scores mean: {best_scores.mean()}"
         )
@@ -73,7 +75,7 @@ def train(
                 threshold_data,
             )
 
-        if save_checkpoint and loop_num % 50 == 0:
+        if save_checkpoint and loop_num % 50 == 49:
             save_path = checkpoint(
                 base_loop_num + loop_num,
                 complete_model_info,
@@ -95,7 +97,7 @@ def main():
     if args.model_path:
         train(save_path=args.model_path)
     else:
-        train()
+        train(plot=False)
 
 
 if __name__ == "__main__":
