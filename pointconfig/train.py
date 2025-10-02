@@ -58,7 +58,7 @@ def train(
         )
         training_tracker.tracking_lists["loss"].append(loss)
         print(
-            f"At {base_loop_num + loop_num+1}, Loss: "
+            f"At {base_loop_num + loop_num + 1}, Loss: "
             f"{training_tracker.tracking_lists['loss'][-1]}\n"
             f"Best scores mean: {best_scores.mean()}"
         )
@@ -77,7 +77,7 @@ def train(
 
         if save_checkpoint and loop_num % 50 == 49:
             save_path = checkpoint(
-                base_loop_num + loop_num,
+                base_loop_num + loop_num + 1,
                 complete_model_info,
                 training_tracker,
                 first_save,
@@ -95,7 +95,7 @@ def main():
     parser.add_argument("--model_path")
     args = parser.parse_args()
     if args.model_path:
-        train(save_path=args.model_path)
+        train(plot=False, save_path=args.model_path)
     else:
         train(plot=False)
 

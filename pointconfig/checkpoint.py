@@ -38,7 +38,7 @@ def checkpoint(
     # file name info
     str_loop_num = str(loop_num)
     digits = len(str_loop_num)
-    file_name_end = "_at_" + ("0" * (5 - digits)) + str_loop_num + "_loops"
+    file_name_end = "_at_" + ("0" * (7 - digits)) + str_loop_num + "_loops"
 
     # save the figures
     if plot:
