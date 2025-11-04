@@ -115,8 +115,8 @@ def _size_scoring(word, prime):
 @njit()
 def _multiple_scoring(size_mod_p, prime):
     if size_mod_p != 0:
-        symmetric_postion = min(size_mod_p, PRIME - size_mod_p)
-        halfway = (PRIME - 1) // 2
+        symmetric_postion = min(size_mod_p, prime - size_mod_p)
+        halfway = (prime - 1) // 2
         return halfway - symmetric_postion
     return prime
 
